@@ -1,45 +1,59 @@
 {% assign monitors = data.monitors %}
 {% assign server_time = message.serverTime | split: 'T' | last | slice: 0, 5 %}
+{% assign rbl1 = trmnl.plugin_settings.custom_fields_values.rbl_1 %}
+{% assign rbl2 = trmnl.plugin_settings.custom_fields_values.rbl_2 %}
+{% assign rbl3 = trmnl.plugin_settings.custom_fields_values.rbl_3 %}
+{% assign rbl4 = trmnl.plugin_settings.custom_fields_values.rbl_4 %}
+{% capture rbl_csv %}{{ rbl1 }},{{ rbl2 }},{{ rbl3 }},{{ rbl4 }}{% endcapture %}
+{% assign rbls = rbl_csv | split: ',' %}
 
 <div class="layout layout--col">
-
-  {% if monitors.size == 0 %}
-    <div class="layout layout--col layout--center">
-      <div class="title">No departures</div>
-    </div>
-  {% endif %}
 
   <table class="table table--base" style="width: 100%; table-layout: fixed">
     <colgroup>
       <col style="width: 10%">
       <col>
-      <col style="width: 12%">
-      <col style="width: 12%">
-      <col style="width: 12%">
+      <col style="width: 44%">
     </colgroup>
     <tbody>
-      {% for m in monitors limit:4 %}
-        {% assign stop_name = m.locationStop.properties.title %}
-        {% assign line = m.lines[0] %}
-        {% if line %}
-          <tr>
-            <td><div class="value value--medium" data-value-fit="true">{{ line.name }}</div></td>
-            <td>
-              <div class="value value--xsmall" data-value-fit="true">→ {{ line.towards | truncate: 22 }}</div>
-              <div class="label text--gray-45">{{ stop_name | truncate: 22 }}</div>
-            </td>
-            {% for dep in line.departures.departure limit:3 %}
-              {% assign t = dep.departureTime.timeReal | default: dep.departureTime.timePlanned %}
-              {% assign hhmm = t | split: 'T' | last | slice: 0, 5 %}
-              <td class="text--right"><div class="value value--small" data-value-fit="true">{{ hhmm }}</div></td>
-            {% endfor %}
-            {% assign dep_count = line.departures.departure | size %}
-            {% if dep_count < 3 %}
-              {% assign missing = 3 | minus: dep_count %}
-              {% for i in (1..missing) %}<td></td>{% endfor %}
+      {% for rbl in rbls %}
+        {% assign rbl_trim = rbl | strip %}
+        {% unless rbl_trim == '' %}
+          {% assign found = false %}
+          {% for m in monitors %}
+            {% assign m_rbl = m.locationStop.properties.attributes.rbl | append: '' %}
+            {% if m_rbl == rbl_trim %}
+              {% assign found = true %}
+              {% assign stop_name = m.locationStop.properties.title %}
+              {% for line in m.lines %}
+                {% assign deps = line.departures.departure %}
+                {% assign t0 = '' %}{% assign t1 = '' %}{% assign t2 = '' %}
+                {% if deps[0] %}{% assign t0 = deps[0].departureTime.timeReal | default: deps[0].departureTime.timePlanned | split: 'T' | last | slice: 0, 5 %}{% endif %}
+                {% if deps[1] %}{% assign t1 = deps[1].departureTime.timeReal | default: deps[1].departureTime.timePlanned | split: 'T' | last | slice: 0, 5 %}{% endif %}
+                {% if deps[2] %}{% assign t2 = deps[2].departureTime.timeReal | default: deps[2].departureTime.timePlanned | split: 'T' | last | slice: 0, 5 %}{% endif %}
+                <tr>
+                  <td><div class="value value--medium" data-value-fit="true">{{ line.name }}</div></td>
+                  <td>
+                    <div class="value value--xsmall" data-value-fit="true">→ {{ line.towards | truncate: 24 }}</div>
+                    <div class="label text--gray-45">{{ stop_name | truncate: 24 }}</div>
+                  </td>
+                  <td class="text--right">
+                    <div class="value value--small">{{ t0 }}{% if t1 != '' %} · {{ t1 }}{% endif %}{% if t2 != '' %} · {{ t2 }}{% endif %}</div>
+                  </td>
+                </tr>
+              {% endfor %}
             {% endif %}
-          </tr>
-        {% endif %}
+          {% endfor %}
+          {% unless found %}
+            <tr>
+              <td><div class="value value--small text--gray-45">—</div></td>
+              <td>
+                <div class="label text--gray-45">RBL {{ rbl_trim }} — no current departures</div>
+              </td>
+              <td></td>
+            </tr>
+          {% endunless %}
+        {% endunless %}
       {% endfor %}
     </tbody>
   </table>
