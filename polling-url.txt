@@ -1,0 +1,1 @@
+https://www.wienerlinien.at/ogd_realtime/monitor?rbl={{ rbl_1 }}&rbl={{ rbl_2 }}&rbl={{ rbl_3 }}&rbl={{ rbl_4 }}

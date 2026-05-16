@@ -1,0 +1,35 @@
+- keyname: rbl_1
+  field_type: string
+  name: Stop 1 — RBL
+  description: RBL/Steig number from the Wiener Linien open data CSV
+  placeholder: "4429"
+  help_text: One RBL = one stop, one line, one direction. Find it at wienerlinien.at/open-data — see the plugin README for the discovery workflow.
+
+- keyname: rbl_2
+  field_type: string
+  name: Stop 2 — RBL (optional)
+  description: Second RBL/Steig number, leave empty to hide
+  placeholder: "121"
+  optional: true
+
+- keyname: rbl_3
+  field_type: string
+  name: Stop 3 — RBL (optional)
+  description: Third RBL/Steig number, leave empty to hide
+  placeholder: "247"
+  optional: true
+
+- keyname: rbl_4
+  field_type: string
+  name: Stop 4 — RBL (optional)
+  description: Fourth RBL/Steig number, leave empty to hide
+  placeholder: "4900"
+  optional: true
+- keyname: about
+  field_type: author_bio
+  name: About this plugin
+  category: life,news
+  description: Live Vienna public transport departures on your TRMNL e-ink display. Configure up to four stops via their RBL/Steig numbers and the device shows the next three departures per line as time of day. Unofficial plugin — not affiliated with Wiener Linien GmbH & Co KG. No data stored; TRMNL polls the Wiener Linien open-data realtime endpoint directly.
+  github_url: https://github.com/johannesnagl/trmnl-plugin-wienerlinien
+  learn_more_url: https://yetanother.one
+  email_address: hi@yetanother.one

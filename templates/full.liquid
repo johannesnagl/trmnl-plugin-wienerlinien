@@ -1,0 +1,68 @@
+{% assign monitors = data.monitors %}
+{% assign server_time = message.serverTime | split: 'T' | last | slice: 0, 5 %}
+{% assign rbl1 = trmnl.plugin_settings.custom_fields_values.rbl_1 %}
+{% assign rbl2 = trmnl.plugin_settings.custom_fields_values.rbl_2 %}
+{% assign rbl3 = trmnl.plugin_settings.custom_fields_values.rbl_3 %}
+{% assign rbl4 = trmnl.plugin_settings.custom_fields_values.rbl_4 %}
+{% capture rbl_csv %}{{ rbl1 }},{{ rbl2 }},{{ rbl3 }},{{ rbl4 }}{% endcapture %}
+{% assign rbls = rbl_csv | split: ',' %}
+
+<div class="layout layout--col">
+
+  <table class="table table--base" style="width: 100%; table-layout: fixed">
+    <colgroup>
+      <col style="width: 12%">
+      <col>
+      <col style="width: 46%">
+    </colgroup>
+    <tbody>
+      {% for rbl in rbls %}
+        {% assign rbl_trim = rbl | strip %}
+        {% unless rbl_trim == '' %}
+          {% assign found = false %}
+          {% for m in monitors %}
+            {% assign m_rbl = m.locationStop.properties.attributes.rbl | append: '' %}
+            {% if m_rbl == rbl_trim %}
+              {% assign found = true %}
+              {% assign stop_name = m.locationStop.properties.title %}
+              {% for line in m.lines %}
+                {% assign deps = line.departures.departure %}
+                {% assign t0 = '' %}{% assign t1 = '' %}{% assign t2 = '' %}
+                {% if deps[0] %}{% assign t0 = deps[0].departureTime.timeReal | default: deps[0].departureTime.timePlanned | split: 'T' | last | slice: 0, 5 %}{% endif %}
+                {% if deps[1] %}{% assign t1 = deps[1].departureTime.timeReal | default: deps[1].departureTime.timePlanned | split: 'T' | last | slice: 0, 5 %}{% endif %}
+                {% if deps[2] %}{% assign t2 = deps[2].departureTime.timeReal | default: deps[2].departureTime.timePlanned | split: 'T' | last | slice: 0, 5 %}{% endif %}
+                <tr>
+                  <td><div class="value value--xlarge" data-value-fit="true">{{ line.name }}</div></td>
+                  <td>
+                    <div class="value value--small" data-value-fit="true">→ {{ line.towards | truncate: 28 }}</div>
+                    <div class="label text--gray-45">{{ stop_name | truncate: 28 }}{% if line.realtimeSupported == false %} · planned{% endif %}</div>
+                  </td>
+                  <td class="text--right">
+                    <div class="value value--medium">{{ t0 }}{% if t1 != '' %} · {{ t1 }}{% endif %}{% if t2 != '' %} · {{ t2 }}{% endif %}</div>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% endif %}
+          {% endfor %}
+          {% unless found %}
+            <tr>
+              <td><div class="value value--medium text--gray-45" data-value-fit="true">—</div></td>
+              <td>
+                <div class="value value--small text--gray-45" data-value-fit="true">RBL {{ rbl_trim }}</div>
+                <div class="label text--gray-45">no current departures</div>
+              </td>
+              <td></td>
+            </tr>
+          {% endunless %}
+        {% endunless %}
+      {% endfor %}
+    </tbody>
+  </table>
+
+</div>
+
+<div class="title_bar">
+  <img class="image" src="https://usetrmnl.com/images/plugins/trmnl--render.svg" />
+  <span class="title">Abfahrtsmonitor</span>
+  <span class="instance">Wiener Linien · as of {{ server_time }}</span>
+</div>

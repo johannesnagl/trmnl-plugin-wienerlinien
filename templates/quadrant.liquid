@@ -1,0 +1,48 @@
+{% comment %} Quadrant (400x240) — first two stops only, very compact. {% endcomment %}
+{% assign monitors = data.monitors %}
+{% assign server_time = message.serverTime | split: 'T' | last | slice: 0, 5 %}
+
+<div class="layout layout--col">
+
+  {% if monitors.size == 0 %}
+    <div class="layout layout--col layout--center"><div class="title">No data</div></div>
+  {% endif %}
+
+  <table style="width: 100%; table-layout: fixed">
+    <colgroup>
+      <col style="width: 22%">
+      <col>
+      <col style="width: 22%">
+      <col style="width: 22%">
+      <col style="width: 22%">
+    </colgroup>
+    <tbody>
+      {% for m in monitors limit:2 %}
+        {% assign stop_name = m.locationStop.properties.title %}
+        {% assign line = m.lines[0] %}
+        {% if line %}
+          <tr>
+            <td><div class="value value--medium" data-value-fit="true">{{ line.name }}</div></td>
+            <td><div class="label text--gray-45">{{ stop_name | truncate: 14 }}</div></td>
+            {% for dep in line.departures.departure limit:3 %}
+              {% assign t = dep.departureTime.timeReal | default: dep.departureTime.timePlanned %}
+              {% assign hhmm = t | split: 'T' | last | slice: 0, 5 %}
+              <td class="text--right"><div class="value value--small" data-value-fit="true">{{ hhmm }}</div></td>
+            {% endfor %}
+            {% assign dep_count = line.departures.departure | size %}
+            {% if dep_count < 3 %}
+              {% assign missing = 3 | minus: dep_count %}
+              {% for i in (1..missing) %}<td></td>{% endfor %}
+            {% endif %}
+          </tr>
+        {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+
+</div>
+
+<div class="title_bar">
+  <span class="title">Abfahrtsmonitor</span>
+  <span class="instance">{{ server_time }}</span>
+</div>
